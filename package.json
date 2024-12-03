@@ -13,7 +13,7 @@
     "test:coverage": "nyc --reporter=json-summary --reporter=text playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.48.0",
+    "@playwright/test": "^1.49.0",
     "@types/node": "^22.7.5",
     "autoprefixer": "^10.4.19",
     "nyc": "^17.1.0",
