@@ -147,6 +147,52 @@ test('register and logout', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Login' })).toBeVisible();
 });
 
+test('diner dashboard', async ({ page }) => {
+  await page.route('*/**/api/auth', async (route) => {
+    const loginReq = { email: 'd@jwt.com', password: 'a' };
+    const loginRes = { user: { id: 3, name: 'Kai Chen', email: 'd@jwt.com', roles: [{ role: 'diner' }] }, token: 'abcdef' };
+    expect(route.request().method()).toBe('PUT');
+    expect(route.request().postDataJSON()).toMatchObject(loginReq);
+    await route.fulfill({ json: loginRes });
+  });
+
+  await page.route('*/**/api/order', async (route) => {
+    const orderRes = {
+      dinerId: 1,
+      orders: [
+        {
+          items: [
+            { menuId: 1, description: 'Veggie', price: 0.0038 },
+            { menuId: 2, description: 'Pepperoni', price: 0.0042 },
+          ],
+          storeId: '4',
+          franchiseId: 2,
+          id: 12,
+          page: 1,
+          date: '2024-09-20T11:59:54.000Z',
+        }
+      ],
+    }
+    expect(route.request().method()).toBe('GET');
+    await route.fulfill({ json: orderRes });
+  });
+
+  await page.goto('http://localhost:5173/');
+
+  // Login
+  await page.getByRole('link', { name: 'Login' }).click();
+  await page.getByPlaceholder('Email address').click();
+  await page.getByPlaceholder('Email address').fill('d@jwt.com');
+  await page.getByPlaceholder('Email address').press('Tab');
+  await page.getByPlaceholder('Password').fill('a');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await expect(page.getByRole('link', { name: 'Logout' })).toBeVisible();
+
+  await page.getByRole('link', { name: 'KC', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Your pizza kitchen' })).toBeVisible();
+  await expect(page.getByText('Here is your history of all the good times.')).toBeVisible();
+});
+
 test('franchise dashboard', async ({ page }) => {
   await page.route('*/**/api/auth', async (route) => {
     const loginReq = { email: 'f@jwt.com', password: 'a' };
